@@ -12,7 +12,8 @@ import {
     Settings,
     LogOut,
     Menu,
-    ShieldCheck
+    ShieldCheck,
+    Palette
 } from 'lucide-react';
 import { authService } from '@/services/authService';
 
@@ -118,6 +119,7 @@ export default function TenantAdminLayout({
                             <p className="px-4 text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2 mt-6">Management</p>
                             <NavItem href="/tenant-admin/tickets" icon={Ticket} label="Tickets" />
                             <NavItem href="/tenant-admin/staff" icon={Users} label="Staff" />
+                            <NavItem href="/tenant-admin/design" icon={Palette} label="Site Design" />
                             <NavItem href="/tenant-admin/settings" icon={Settings} label="Settings" />
                         </ul>
                     </div>

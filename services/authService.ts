@@ -13,8 +13,15 @@ export interface LoginResponse {
 
 export const authService = {
   login: async (email: string, password: string): Promise<LoginResponse> => {
-    const response = await api.post<LoginResponse>('/auth/login', { email, password });
-    return response.data;
+    console.log(`Attempting login for ${email}...`);
+    try {
+      const response = await api.post<LoginResponse>('/auth/login', { email, password });
+      console.log('Login API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Login API error:', error);
+      throw error;
+    }
   },
 
   register: async (data: any): Promise<any> => {

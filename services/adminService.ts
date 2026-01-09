@@ -148,6 +148,27 @@ export const adminService = {
     const response = await api.delete(`/admin/themes/${id}`);
     return response.data;
   },
+
+  updateThemeStatus: async (id: string, status: string) => {
+    const response = await api.patch(`/admin/themes/${id}/status`, { status });
+    return response.data;
+  },
+
+  updateThemePrice: async (id: string, price: number, isPremium: boolean) => {
+    const response = await api.patch(`/admin/themes/${id}/price`, { price, isPremium });
+    return response.data;
+  },
+
+  // Tenant Config
+  getTenantConfig: async (tenantId: string) => {
+    const response = await api.get(`/admin/tenant-config/${tenantId}`);
+    return response.data;
+  },
+
+  updateTenantConfig: async (tenantId: string, data: any) => {
+    const response = await api.put(`/admin/tenant-config/${tenantId}`, data);
+    return response.data;
+  }
 };
 
 export default adminService;
