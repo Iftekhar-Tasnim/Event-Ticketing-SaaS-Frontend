@@ -4,10 +4,10 @@ import VibrantFestivalEventPage from '@/components/themes/vibrant-festival/compo
 import ProfessionalCorporateEventPage from '@/components/themes/professional-corporate/components/EventLandingPage';
 
 interface PageProps {
-    params: {
+    params: Promise<{
         tenantSlug: string;
         eventSlug: string;
-    };
+    }>;
 }
 
 async function getEventData(tenantSlug: string, eventSlug: string) {
@@ -47,7 +47,10 @@ async function getTickets(eventId: string) {
 }
 
 export default async function PublicEventPage({ params }: PageProps) {
-    const data = await getEventData(params.tenantSlug, params.eventSlug);
+    // Await params to unwrap the Promise (Next.js 15+)
+    const { tenantSlug, eventSlug } = await params;
+
+    const data = await getEventData(tenantSlug, eventSlug);
 
     if (!data || !data.event) {
         notFound();
@@ -58,7 +61,7 @@ export default async function PublicEventPage({ params }: PageProps) {
 
     // Dynamically load theme based on event.theme.name
     const themeName = event.theme?.name || 'Modern Dark';
-    const tenantName = event.tenant?.name || params.tenantSlug;
+    const tenantName = event.tenant?.name || tenantSlug;
 
     const themeComponents: Record<string, any> = {
         'Modern Dark': ModernDarkEventPage,
