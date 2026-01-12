@@ -13,7 +13,8 @@ import {
     CreditCard,
     Palette,
     Shield,
-    Activity
+    Activity,
+    UserPlus
 } from 'lucide-react';
 import { authService } from '@/services/authService';
 
@@ -131,6 +132,7 @@ export default function AdminLayout({
                             <p className="px-4 text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2 mt-2">Overview</p>
                             <NavItem href="/admin/dashboard" icon={LayoutDashboard} label="Dashboard" />
                             <NavItem href="/admin/users" icon={Users} label="Users" />
+                            <NavItem href="/admin/create-admin" icon={UserPlus} label="Create Admin" />
                             <NavItem href="/admin/tenants" icon={Building2} label="Tenants" />
 
                             <p className="px-4 text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2 mt-6">Platform</p>
@@ -145,7 +147,7 @@ export default function AdminLayout({
                         <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-4"></div>
 
                         {/* Admin Info */}
-                        <div className="px-4 py-3 mb-2 rounded-xl bg-white/5 border border-white/10">
+                        <Link href="/admin/profile" className="block px-4 py-3 mb-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-sm shadow-lg">
                                     SA
@@ -155,7 +157,7 @@ export default function AdminLayout({
                                     <p className="text-xs text-slate-400">Platform Control</p>
                                 </div>
                             </div>
-                        </div>
+                        </Link>
 
                         <button
                             onClick={handleLogout}
