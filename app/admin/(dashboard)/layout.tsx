@@ -2,19 +2,30 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, Users, Settings, LogOut, Menu, X, Bell, Search, Ticket, Building2, CreditCard, Palette, Shield } from 'lucide-react';
-
+import { useRouter, usePathname } from 'next/navigation';
+import {
+    LayoutDashboard,
+    Users,
+    Settings,
+    LogOut,
+    Menu,
+    Building2,
+    CreditCard,
+    Palette,
+    Shield,
+    Activity
+} from 'lucide-react';
 import { authService } from '@/services/authService';
-import { useRouter } from 'next/navigation';
 
 export default function AdminLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [loggingOut, setLoggingOut] = useState(false);
     const router = useRouter();
+    const pathname = usePathname();
 
     React.useEffect(() => {
         const verifySession = async () => {
@@ -22,133 +33,141 @@ export default function AdminLayout({
                 await authService.checkAuth();
                 setIsAuthenticated(true);
             } catch (error) {
-                // If 401/403, redirect to admin login
                 router.replace('/admin/login');
             }
         };
         verifySession();
     }, [router]);
 
-    async function handleLogout() {
-        await authService.logout();
-        router.replace('/admin/login');
-    }
+    const handleLogout = async () => {
+        setLoggingOut(true);
+        try {
+            await authService.logout();
+            router.push('/admin/login');
+        } catch (error) {
+            console.error('Logout failed', error);
+        } finally {
+            setLoggingOut(false);
+        }
+    };
 
     if (!isAuthenticated) {
-        return null; // Or a loading spinner
+        return null;
     }
 
-    const navItems = [
-        { icon: <LayoutDashboard size={20} />, label: 'Dashboard', href: '/admin/dashboard' },
-        { label: 'Users', icon: <Users size={20} />, href: '/admin/users' },
-        { label: 'Tenants', icon: <Building2 size={20} />, href: '/admin/tenants' },
-        { label: 'Themes', icon: <Palette size={20} />, href: '/admin/themes' }, // New Theme Item
-        { label: 'Payment', icon: <CreditCard size={20} />, href: '/admin/payment' },
-        { label: 'Settings', icon: <Settings size={20} />, href: '/admin/settings' },
-    ];
+    const NavItem = ({ href, icon: Icon, label }: { href: string; icon: any; label: string }) => {
+        const isActive = pathname === href;
+        return (
+            <li>
+                <Link
+                    href={href}
+                    className={`
+                        flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium group
+                        ${isActive
+                            ? 'bg-white/10 text-emerald-400 shadow-lg shadow-black/10 backdrop-blur-sm'
+                            : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        }
+                    `}
+                >
+                    <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-emerald-400' : 'text-slate-400 group-hover:text-white'}`} />
+                    <span>{label}</span>
+                    {isActive && (
+                        <div className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"></div>
+                    )}
+                </Link>
+            </li>
+        );
+    };
 
     return (
-        <div className="min-h-screen bg-slate-50 font-sans text-slate-900 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-50 via-slate-50 to-slate-100">
-            {/* Sidebar */}
-            <aside
-                className={`fixed left-0 top-0 z-40 h-screen transition-all duration-300 ease-in-out border-r border-slate-800 bg-slate-950 shadow-2xl ${isSidebarOpen ? 'w-64' : 'w-20'
-                    }`}
-            >
-                <div className="flex flex-col h-full">
-                    {/* Logo Section */}
-                    <div className="p-6 flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 shadow-lg shadow-emerald-500/20 ring-1 ring-emerald-500/50">
-                            <Ticket className="text-white" size={22} />
-                        </div>
-                        {isSidebarOpen && (
-                            <div className="flex flex-col leading-tight overflow-hidden whitespace-nowrap">
-                                <span className="text-lg font-black tracking-tighter text-white italic">TicketBD</span>
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-500">Admin Portal</span>
-                            </div>
-                        )}
+        <div className="drawer lg:drawer-open font-sans antialiased text-slate-900 bg-slate-50">
+            <input id="admin-drawer" type="checkbox" className="drawer-toggle" />
+
+            {/* Main Content */}
+            <div className="drawer-content flex flex-col min-h-screen">
+                {/* Mobile Navbar */}
+                <div className="w-full navbar bg-slate-900 text-white shadow-md lg:hidden z-20">
+                    <div className="flex-none">
+                        <label htmlFor="admin-drawer" className="btn btn-square btn-ghost">
+                            <Menu className="h-6 w-6" />
+                        </label>
                     </div>
-
-                    {/* Navigation */}
-                    <nav className="flex-1 px-4 space-y-2 mt-4">
-                        {navItems.map((item) => (
-                            <Link
-                                key={item.label}
-                                href={item.href}
-                                className="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all duration-200 group relative"
-                            >
-                                <div className="shrink-0 group-hover:text-emerald-400 transition-colors">{item.icon}</div>
-                                {isSidebarOpen && <span className="text-sm font-bold tracking-wide">{item.label}</span>}
-                                {!isSidebarOpen && (
-                                    <div className="absolute left-full ml-4 px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-xl border border-slate-800">
-                                        {item.label}
-                                    </div>
-                                )}
-                            </Link>
-                        ))}
-                    </nav>
-
-                    {/* User Bottom Section */}
-                    <div className="p-4 border-t border-slate-900/50">
-                        <button
-                            onClick={handleLogout}
-                            className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all duration-200 group"
-                        >
-                            <LogOut size={20} className="shrink-0 group-hover:text-red-400 transition-colors" />
-                            {isSidebarOpen && <span className="text-sm font-bold">Logout</span>}
-                        </button>
+                    <div className="flex-1">
+                        <span className="text-xl font-bold flex items-center gap-2">
+                            <Shield className="text-emerald-400" size={20} />
+                            TicketBD Admin
+                        </span>
                     </div>
                 </div>
-            </aside>
-
-            {/* Main Content Area */}
-            <main
-                className={`transition-all duration-300 min-h-screen ${isSidebarOpen ? 'ml-64' : 'ml-20'
-                    }`}
-            >
-                {/* Header */}
-                <header className="sticky top-0 z-30 flex h-20 items-center justify-between px-8 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 transition-all">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className="p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-500 hover:text-emerald-600"
-                        >
-                            {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-                        </button>
-                        <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white/50 rounded-full border border-slate-200 focus-within:border-emerald-500/50 focus-within:ring-4 focus-within:ring-emerald-500/10 transition-all shadow-sm">
-                            <Search size={14} className="text-slate-400" />
-                            <input
-                                type="text"
-                                placeholder="Search anything..."
-                                className="bg-transparent border-none text-xs focus:ring-0 w-48 text-slate-600 placeholder:text-slate-400 p-0 font-medium"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <button className="relative p-2 rounded-lg hover:bg-emerald-50 transition-colors text-slate-500 hover:text-emerald-600">
-                            <Bell size={20} />
-                            <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white"></span>
-                        </button>
-                        <div className="h-8 w-[1px] bg-slate-200"></div>
-                        <div className="flex items-center gap-3 pl-2 cursor-pointer hover:opacity-80 transition-opacity">
-                            <div className="flex flex-col items-end leading-none hidden sm:flex">
-                                <span className="text-xs font-bold text-slate-900">Super Admin</span>
-                                <span className="text-[10px] font-bold text-emerald-600 tracking-wide uppercase">Platform Control</span>
-                            </div>
-                            <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-emerald-100 to-emerald-50 border-2 border-white ring-2 ring-emerald-100 flex items-center justify-center font-black text-emerald-700 shadow-md">
-                                SA
-                            </div>
-                        </div>
-                    </div>
-                </header>
 
                 {/* Page Content */}
-                <div className="p-8">
-                    <div className="max-w-7xl mx-auto">
-                        {children}
+                <main className="flex-1 p-4 sm:p-6 lg:p-10 overflow-y-auto bg-slate-50/50">
+                    {children}
+                </main>
+            </div>
+
+            {/* Sidebar */}
+            <div className="drawer-side z-30">
+                <label htmlFor="admin-drawer" className="drawer-overlay bg-black/50 backdrop-blur-sm"></label>
+                <div className="menu p-4 w-72 min-h-full bg-[#022c22] text-base-content flex flex-col justify-between border-r border-white/5 shadow-2xl relative overflow-hidden">
+                    {/* Background Gradients */}
+                    <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-emerald-500/10 rounded-full blur-[96px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                    <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-teal-500/10 rounded-full blur-[96px] translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+
+                    <div>
+                        {/* Logo Section */}
+                        <div className="flex items-center gap-3 px-2 mb-10 pt-2 relative z-10">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-lg shadow-emerald-900/40 ring-1 ring-white/10">
+                                <Shield className="h-6 w-6" />
+                            </div>
+                            <div className="flex flex-col">
+                                <h2 className="text-lg font-bold text-white leading-tight tracking-tight">TicketBD</h2>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Admin Portal</span>
+                            </div>
+                        </div>
+
+                        {/* Navigation */}
+                        <ul className="space-y-1 relative z-10">
+                            <p className="px-4 text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2 mt-2">Overview</p>
+                            <NavItem href="/admin/dashboard" icon={LayoutDashboard} label="Dashboard" />
+                            <NavItem href="/admin/users" icon={Users} label="Users" />
+                            <NavItem href="/admin/tenants" icon={Building2} label="Tenants" />
+
+                            <p className="px-4 text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2 mt-6">Platform</p>
+                            <NavItem href="/admin/themes" icon={Palette} label="Themes" />
+                            <NavItem href="/admin/payment" icon={CreditCard} label="Payments" />
+                            <NavItem href="/admin/settings" icon={Settings} label="Settings" />
+                        </ul>
+                    </div>
+
+                    {/* User & Logout */}
+                    <div className="relative z-10">
+                        <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-4"></div>
+
+                        {/* Admin Info */}
+                        <div className="px-4 py-3 mb-2 rounded-xl bg-white/5 border border-white/10">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                                    SA
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-bold text-white truncate">Super Admin</p>
+                                    <p className="text-xs text-slate-400">Platform Control</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={handleLogout}
+                            disabled={loggingOut}
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:text-red-400 hover:bg-red-500/10 group"
+                        >
+                            <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            <span className="font-medium text-sm">{loggingOut ? 'Signing out...' : 'Sign Out'}</span>
+                        </button>
                     </div>
                 </div>
-            </main>
+            </div>
         </div>
     );
 }
