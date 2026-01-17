@@ -21,6 +21,10 @@ export interface CreateEventDto {
     startAt: Date | string;
     endAt: Date | string;
     status?: EventStatus;
+    // Extended Fields
+    fullDescription?: string;
+    capacity?: number;
+    price?: number;
     // Theme Fields
     themeId?: string;
     themeContent?: any;
