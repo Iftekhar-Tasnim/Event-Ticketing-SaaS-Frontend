@@ -83,6 +83,39 @@ export default function PaymentPage() {
     const completedCount = payments.filter(p => ['completed', 'succeeded', 'paid'].includes(p.status?.toLowerCase())).length;
     const pendingCount = payments.filter(p => p.status?.toLowerCase() === 'pending').length;
 
+    const handleExportCSV = () => {
+        if (!payments.length) return;
+
+        const headers = ["Transaction ID", "Amount", "Currency", "Status", "Provider", "Created At", "Order ID", "Provider Reference"];
+        const csvRows = [headers.join(",")];
+
+        for (const payment of payments) {
+            const row = [
+                payment.id,
+                (payment.amountCents / 100).toFixed(2),
+                payment.currency,
+                payment.status,
+                payment.provider,
+                new Date(payment.createdAt).toISOString(),
+                payment.orderId || "",
+                payment.providerReference || ""
+            ];
+            // Escape quotes and wrap fields in quotes to handle commas within data
+            const escapedRow = row.map(field => `"${String(field).replace(/"/g, '""')}"`);
+            csvRows.push(escapedRow.join(","));
+        }
+
+        const csvString = csvRows.join("\n");
+        const blob = new Blob([csvString], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `payment_ledger_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <div className="max-w-7xl mx-auto space-y-6 lg:space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
 
@@ -104,7 +137,7 @@ export default function PaymentPage() {
                         </p>
                     </div>
                     <div className="shrink-0">
-                        <button className="flex items-center gap-3 bg-white text-slate-900 px-6 py-3.5 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl transition-all hover:-translate-y-1 active:scale-95 group">
+                        <button onClick={handleExportCSV} className="flex items-center gap-3 bg-white text-slate-900 px-6 py-3.5 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl transition-all hover:-translate-y-1 active:scale-95 group">
                             <Download size={16} className="text-emerald-600 group-hover:translate-y-0.5 transition-transform" />
                             Export Ledger
                         </button>
